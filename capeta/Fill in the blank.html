@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fill in the Blank — English Learning Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #faf8f3;
+    --surface: #fff;
+    --ink: #1a1814;
+    --muted: #9a9590;
+    --border: #e8e4db;
+    --accent: #2d5be3;
+    --accent-light: #eef2fd;
+    --wrong: #e33d2d;
+    --wrong-light: #fdeeed;
+    --right: #1a9e5c;
+    --right-light: #e8f9f0;
+    --shadow: rgba(26,24,20,0.08);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1rem 4rem;
+  }
+
+  header { text-align: center; margin-bottom: 2rem; }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  header p { color: var(--muted); font-size: 0.875rem; margin-top: 0.3rem; }
+
+  .topic-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  .topic-btn {
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .topic-btn:hover, .topic-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  .meta-row strong { color: var(--ink); }
+
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 620px;
+    box-shadow: 0 2px 20px var(--shadow);
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  .q-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .sentence {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    font-weight: 300;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+  }
+
+  .blank {
+    display: inline-block;
+    min-width: 100px;
+    border-bottom: 2.5px solid var(--accent);
+    padding: 0 4px 2px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--accent);
+    text-align: center;
+    vertical-align: bottom;
+    transition: all 0.2s;
+  }
+
+  .blank.correct { border-color: var(--right); color: var(--right); background: var(--right-light); border-radius: 4px; padding: 2px 8px; }
+  .blank.wrong { border-color: var(--wrong); color: var(--wrong); background: var(--wrong-light); border-radius: 4px; padding: 2px 8px; }
+
+  .hint {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 1.2rem;
+  }
+
+  .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .option {
+    padding: 0.5rem 1.1rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .option:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .option:disabled { cursor: not-allowed; opacity: 0.4; }
+  .option.selected-wrong { background: var(--wrong-light); border-color: var(--wrong); color: var(--wrong); }
+  .option.is-answer { background: var(--right-light); border-color: var(--right); color: var(--right); }
+
+  .feedback-bar {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    font-size: 0.88rem;
+    font-weight: 500;
+    padding: 0 0.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .feedback-bar.show { opacity: 1; }
+  .feedback-bar.right { color: var(--right); background: var(--right-light); }
+  .feedback-bar.wrong { color: var(--wrong); background: var(--wrong-light); }
+
+  .nav-btn {
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    padding: 0.75rem 2.5rem;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .nav-btn:hover { opacity: 0.8; }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .progress-row {
+    width: 100%;
+    max-width: 620px;
+    margin-bottom: 1rem;
+  }
+
+  .progress-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 100px;
+    transition: width 0.4s ease;
+  }
+
+  .result-screen {
+    text-align: center;
+    max-width: 480px;
+    display: none;
+  }
+
+  .result-screen h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+  }
+
+  .big-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 5rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin: 1rem 0;
+  }
+
+  .review-list { text-align: left; margin: 1.5rem 0; }
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .review-item .answer { color: var(--right); font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Fill in the Blank</h1>
+  <p>Grammar & vocabulary in context — choose the correct option</p>
+</header>
+
+<div class="topic-row">
+  <button class="topic-btn active" onclick="setTopic('all', this)">All topics</button>
+  <button class="topic-btn" onclick="setTopic('conditionals', this)">Conditionals</button>
+  <button class="topic-btn" onclick="setTopic('tenses', this)">Tenses</button>
+  <button class="topic-btn" onclick="setTopic('vocabulary', this)">Vocabulary</button>
+  <button class="topic-btn" onclick="setTopic('prepositions', this)">Prepositions</button>
+</div>
+
+<div class="meta-row">
+  <span>Score: <strong id="score-display">0</strong></span>
+  <span>Correct: <strong id="correct-display">0</strong></span>
+  <span>Wrong: <strong id="wrong-display">0</strong></span>
+</div>
+
+<div class="progress-row">
+  <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+
+<div class="question-card" id="q-card">
+  <div class="q-number" id="q-num">Question 1 of 0</div>
+  <div class="sentence" id="sentence-display"></div>
+  <div class="hint" id="hint-display"></div>
+  <div class="options" id="options-area"></div>
+</div>
+
+<div class="feedback-bar" id="feedback"></div>
+<button class="nav-btn" id="next-btn" onclick="nextQ()" disabled>Next →</button>
+
+<div class="result-screen" id="result-screen">
+  <h2>Quiz complete!</h2>
+  <div class="big-score" id="final-score-display">0%</div>
+  <p style="color:var(--muted);">Review the ones you missed:</p>
+  <div class="review-list" id="review-list"></div>
+  <button class="nav-btn" onclick="restart()" style="margin-top:1rem;">Try again</button>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  { topic: "conditionals", sentence: "If she ___ harder, she would have passed the exam.", blank_idx: 2, options: ["studied", "had studied", "would study", "studies"], answer: "had studied", hint: "Imagining a different past outcome = 3rd conditional" },
+  { topic: "conditionals", sentence: "Unless you ___ now, you'll miss the train.", blank_idx: 2, options: ["leave", "will leave", "left", "would leave"], answer: "leave", hint: "'Unless' = 'if not' — use present simple for real future conditions" },
+  { topic: "conditionals", sentence: "If I were you, I ___ apologise immediately.", blank_idx: 5, options: ["will", "would", "should", "am going to"], answer: "would", hint: "Advice using 2nd conditional: 'If I were you, I would...'" },
+  { topic: "tenses", sentence: "She ___ in Mendoza for 10 years — she loves it there.", blank_idx: 1, options: ["lived", "has lived", "is living", "was living"], answer: "has lived", hint: "Still true now = present perfect (duration up to present)" },
+  { topic: "tenses", sentence: "By the time he arrived, the meeting ___.", blank_idx: 7, options: ["already finished", "has already finished", "had already finished", "already finishes"], answer: "had already finished", hint: "An action completed before another past moment = past perfect" },
+  { topic: "tenses", sentence: "I ___ to call you yesterday but I completely forgot.", blank_idx: 1, options: ["meant", "have meant", "was meaning", "mean"], answer: "meant", hint: "A specific completed intention in the past = past simple" },
+  { topic: "vocabulary", sentence: "The only ___ of living downtown is the noise.", blank_idx: 4, options: ["problem", "drawback", "error", "fault"], answer: "drawback", hint: "Common B2 word for 'disadvantage' — collocates with 'main' and 'only'" },
+  { topic: "vocabulary", sentence: "She was ___ to admit she had been wrong.", blank_idx: 2, options: ["unwilling", "reluctant", "hesitant", "reluctant"], answer: "reluctant", hint: "B2 adjective — pattern: reluctant + to + infinitive" },
+  { topic: "vocabulary", sentence: "The report raised ___ about the safety of the product.", blank_idx: 2, options: ["doubts", "concerns", "problems", "questions"], answer: "concerns", hint: "'raise concerns' is a fixed collocation at B2 level" },
+  { topic: "prepositions", sentence: "I've been interested ___ linguistics since I was a child.", blank_idx: 3, options: ["in", "about", "for", "of"], answer: "in", hint: "Fixed: interested IN (not about)" },
+  { topic: "prepositions", sentence: "The success of the project depends ___ everyone's cooperation.", blank_idx: 6, options: ["of", "from", "on", "about"], answer: "on", hint: "Fixed: depend ON (not 'depend of')" },
+  { topic: "prepositions", sentence: "Despite ___ heavy rain, they continued the match.", blank_idx: 1, options: ["of the", "the", "a", "all"], answer: "the", hint: "'Despite' is NEVER followed by 'of' — just the noun/gerund directly" },
+];
+
+let questions = [];
+let qIdx = 0;
+let score = 0;
+let numCorrect = 0;
+let numWrong = 0;
+let answered = false;
+let wrongList = [];
+
+function setTopic(topic, btn) {
+  document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (topic === 'all') questions = [...ALL_QUESTIONS];
+  else questions = ALL_QUESTIONS.filter(q => q.topic === topic);
+  restart();
+}
+
+function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
+
+function buildSentence(q) {
+  const words = q.sentence.split(' ');
+  let html = '';
+  words.forEach((w, i) => {
+    if (w === '___') html += `<span class="blank" id="blank-span">___</span> `;
+    else html += w + ' ';
+  });
+  return html;
+}
+
+function showQuestion() {
+  if (qIdx >= questions.length) { showResult(); return; }
+  const q = questions[qIdx];
+  answered = false;
+
+  document.getElementById('q-num').textContent = `Question ${qIdx + 1} of ${questions.length}`;
+  document.getElementById('sentence-display').innerHTML = buildSentence(q);
+  document.getElementById('hint-display').textContent = '💡 ' + q.hint;
+  document.getElementById('prog-fill').style.width = (qIdx / questions.length * 100) + '%';
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback-bar';
+  fb.textContent = '';
+
+  const area = document.getElementById('options-area');
+  area.innerHTML = '';
+  shuffle([...q.options]).forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.onclick = () => checkAnswer(opt, btn, q);
+    area.appendChild(btn);
+  });
+
+  document.getElementById('next-btn').disabled = true;
+}
+
+function checkAnswer(selected, btn, q) {
+  if (answered) return;
+  answered = true;
+
+  const isRight = selected === q.answer;
+  const fb = document.getElementById('feedback');
+  const blank = document.getElementById('blank-span');
+
+  if (isRight) {
+    numCorrect++;
+    score += 10;
+    blank.textContent = selected;
+    blank.className = 'blank correct';
+    fb.textContent = '✓ Correct!';
+    fb.className = 'feedback-bar right show';
+    btn.classList.add('is-answer');
+  } else {
+    numWrong++;
+    blank.textContent = q.answer;
+    blank.className = 'blank wrong';
+    fb.textContent = `✗ The answer is: "${q.answer}"`;
+    fb.className = 'feedback-bar wrong show';
+    btn.classList.add('selected-wrong');
+    wrongList.push(q);
+    document.querySelectorAll('.option').forEach(b => {
+      if (b.textContent === q.answer) b.classList.add('is-answer');
+    });
+  }
+
+  document.querySelectorAll('.option').forEach(b => b.disabled = true);
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('correct-display').textContent = numCorrect;
+  document.getElementById('wrong-display').textContent = numWrong;
+  document.getElementById('next-btn').disabled = false;
+}
+
+function nextQ() {
+  qIdx++;
+  showQuestion();
+}
+
+function showResult() {
+  document.getElementById('q-card').style.display = 'none';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('next-btn').style.display = 'none';
+  const rs = document.getElementById('result-screen');
+  rs.style.display = 'block';
+  const total = numCorrect + numWrong;
+  const pct = total ? Math.round(numCorrect / total * 100) : 0;
+  document.getElementById('final-score-display').textContent = pct + '%';
+
+  const rl = document.getElementById('review-list');
+  rl.innerHTML = '';
+  if (wrongList.length === 0) {
+    rl.innerHTML = '<p style="color:var(--right);font-weight:500;">Perfect score! Nothing to review.</p>';
+  } else {
+    wrongList.forEach(q => {
+      const div = document.createElement('div');
+      div.className = 'review-item';
+      div.innerHTML = `${q.sentence.replace('___', `<span class="answer">${q.answer}</span>`)}`;
+      rl.appendChild(div);
+    });
+  }
+}
+
+function restart() {
+  qIdx = 0; score = 0; numCorrect = 0; numWrong = 0; answered = false; wrongList = [];
+  document.getElementById('q-card').style.display = 'block';
+  document.getElementById('feedback').style.display = 'flex';
+  document.getElementById('next-btn').style.display = 'block';
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('score-display').textContent = 0;
+  document.getElementById('correct-display').textContent = 0;
+  document.getElementById('wrong-display').textContent = 0;
+  questions = shuffle([...questions]);
+  showQuestion();
+}
+
+questions = [...ALL_QUESTIONS];
+restart();
+</script>
+</body>
+</html>
