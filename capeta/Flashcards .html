@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcards — English Learning Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f11;
+    --surface: #1a1a1f;
+    --surface2: #242429;
+    --accent: #c8f04a;
+    --accent2: #7b6ef6;
+    --text: #f0ede8;
+    --muted: #7a7a85;
+    --border: #2e2e35;
+    --red: #f06a6a;
+    --green: #6af09a;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  header h1 span { color: var(--accent); }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 0.4rem;
+  }
+
+  .controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .controls button {
+    padding: 0.45rem 1.1rem;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .controls button:hover, .controls button.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+
+  .stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .stats span strong { color: var(--text); font-weight: 500; }
+
+  .card-area {
+    perspective: 1200px;
+    width: 100%;
+    max-width: 520px;
+    height: 300px;
+    margin-bottom: 2rem;
+    cursor: pointer;
+  }
+
+  .card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+  }
+
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .card-front {
+    background: var(--surface);
+  }
+
+  .card-back {
+    background: var(--surface2);
+    transform: rotateY(180deg);
+  }
+
+  .card-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .card-word {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-pos {
+    font-size: 0.8rem;
+    color: var(--accent2);
+    margin-bottom: 0.8rem;
+    font-style: italic;
+  }
+
+  .card-hint {
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  .card-definition {
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .card-example {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.5;
+    border-left: 2px solid var(--accent);
+    padding-left: 0.8rem;
+    text-align: left;
+  }
+
+  .flip-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .btn {
+    padding: 0.7rem 1.8rem;
+    border-radius: 12px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn:active { transform: scale(0.97); }
+
+  .btn-wrong {
+    background: rgba(240, 106, 106, 0.12);
+    color: var(--red);
+    border: 1px solid rgba(240, 106, 106, 0.3);
+  }
+
+  .btn-correct {
+    background: rgba(106, 240, 154, 0.12);
+    color: var(--green);
+    border: 1px solid rgba(106, 240, 154, 0.3);
+  }
+
+  .btn-skip {
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-wrong:hover { background: rgba(240, 106, 106, 0.22); }
+  .btn-correct:hover { background: rgba(106, 240, 154, 0.22); }
+  .btn-skip:hover { background: var(--surface2); }
+
+  .progress-bar {
+    width: 100%;
+    max-width: 520px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 100px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .complete-screen {
+    text-align: center;
+    padding: 2rem;
+    display: none;
+  }
+
+  .complete-screen h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .score-badge {
+    display: inline-block;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'Playfair Display', serif;
+    margin: 1rem 0;
+  }
+
+  .btn-restart {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: opacity 0.2s;
+  }
+
+  .btn-restart:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Flash<span>cards</span></h1>
+  <p>Click the card to reveal • Mark what you know</p>
+</header>
+
+<div class="controls">
+  <button class="active" onclick="setDeck('all', this)">All words</button>
+  <button onclick="setDeck('vocabulary', this)">Vocabulary</button>
+  <button onclick="setDeck('collocations', this)">Collocations</button>
+  <button onclick="setDeck('phrasal', this)">Phrasal verbs</button>
+  <button onclick="setDeck('wrong', this)">Review wrong ❌</button>
+</div>
+
+<div class="stats">
+  <span>✅ Correct: <strong id="stat-correct">0</strong></span>
+  <span>❌ Wrong: <strong id="stat-wrong">0</strong></span>
+  <span>📦 Remaining: <strong id="stat-remain">0</strong></span>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+</div>
+<div class="progress-text" id="progress-text">Card 1 of 0</div>
+
+<div class="card-area" onclick="flipCard()" id="card-area">
+  <div class="card" id="card">
+    <div class="card-face card-front">
+      <div class="card-label">word</div>
+      <div class="card-word" id="front-word">—</div>
+      <div class="card-pos" id="front-pos"></div>
+      <div class="card-hint" id="front-hint">click to reveal</div>
+    </div>
+    <div class="card-face card-back">
+      <div class="card-label">definition</div>
+      <div class="card-definition" id="back-def">—</div>
+      <div class="card-example" id="back-example"></div>
+    </div>
+  </div>
+</div>
+
+<div class="flip-hint" id="flip-hint">👆 Tap card to flip</div>
+
+<div class="actions">
+  <button class="btn btn-wrong" onclick="mark(false)">✗ Didn't know</button>
+  <button class="btn btn-skip" onclick="nextCard()">→ Skip</button>
+  <button class="btn btn-correct" onclick="mark(true)">✓ Got it</button>
+</div>
+
+<div class="complete-screen" id="complete-screen">
+  <h2>Round complete!</h2>
+  <div class="score-badge" id="final-score"></div>
+  <p style="color:var(--muted); font-size:0.9rem;">Keep reviewing the ones you missed.</p>
+  <button class="btn-restart" onclick="restart()">Start again</button>
+</div>
+
+<script>
+const ALL_CARDS = [
+  { word: "inevitable", pos: "adj", category: "vocabulary", definition: "Certain to happen; impossible to avoid.", example: '"Climate change makes some coastal flooding inevitable." — BBC' },
+  { word: "nuance", pos: "noun", category: "vocabulary", definition: "A subtle difference in meaning or expression.", example: '"The translator struggled to capture the nuances of the text." — The Guardian' },
+  { word: "reluctant", pos: "adj", category: "vocabulary", definition: "Unwilling or hesitant to do something.", example: '"She was reluctant to admit she had been wrong."' },
+  { word: "drawback", pos: "noun", category: "vocabulary", definition: "A disadvantage or problem with something.", example: '"The main drawback of remote work is isolation." — HBR' },
+  { word: "forthcoming", pos: "adj", category: "vocabulary", definition: "(1) About to happen. (2) Willing to share information.", example: '"He wasn\'t very forthcoming about his reasons."' },
+  { word: "make a decision", pos: "collocation", category: "collocations", definition: "To decide something (not 'do a decision').", example: '"It\'s time to make a decision about your career."' },
+  { word: "conduct research", pos: "collocation", category: "collocations", definition: "To carry out research (not 'make research').", example: '"The team conducted extensive research before publishing."' },
+  { word: "raise awareness", pos: "collocation", category: "collocations", definition: "To increase people's knowledge about an issue.", example: '"The campaign raised awareness about mental health."' },
+  { word: "deeply concerned", pos: "collocation", category: "collocations", definition: "Very worried (stronger than 'very concerned').", example: '"Officials are deeply concerned about rising temperatures."' },
+  { word: "come up with", pos: "phrasal verb", category: "phrasal", definition: "To think of an idea or solution.", example: '"She came up with a brilliant solution to the problem."' },
+  { word: "put off", pos: "phrasal verb", category: "phrasal", definition: "To postpone or delay something.", example: '"Stop putting off the difficult conversations."' },
+  { word: "come across", pos: "phrasal verb", category: "phrasal", definition: "To seem or be perceived in a certain way.", example: '"He comes across as very confident in interviews."' },
+  { word: "follow up", pos: "phrasal verb", category: "phrasal", definition: "To check progress on something previously started.", example: '"I\'ll follow up on that email tomorrow morning."' },
+  { word: "build on", pos: "phrasal verb", category: "phrasal", definition: "To use something as a foundation for further progress.", example: '"We need to build on last year\'s success."' },
+  { word: "keep up with", pos: "phrasal verb", category: "phrasal", definition: "To stay at the same pace or level as someone/something.", example: '"It\'s hard to keep up with new technology."' },
+];
+
+let deck = [...ALL_CARDS];
+let current = 0;
+let flipped = false;
+let correct = 0;
+let wrong = 0;
+let wrongCards = [];
+let currentDeck = 'all';
+
+function setDeck(type, btn) {
+  currentDeck = type;
+  document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  restart();
+}
+
+function buildDeck() {
+  if (currentDeck === 'wrong') {
+    deck = wrongCards.length ? [...wrongCards] : [...ALL_CARDS];
+  } else if (currentDeck === 'all') {
+    deck = [...ALL_CARDS];
+  } else {
+    deck = ALL_CARDS.filter(c => c.category === currentDeck);
+  }
+  deck = deck.sort(() => Math.random() - 0.5);
+}
+
+function showCard() {
+  if (current >= deck.length) { showComplete(); return; }
+  const c = deck[current];
+  document.getElementById('front-word').textContent = c.word;
+  document.getElementById('front-pos').textContent = c.pos;
+  document.getElementById('front-hint').textContent = 'click to reveal';
+  document.getElementById('back-def').textContent = c.definition;
+  document.getElementById('back-example').textContent = c.example;
+  document.getElementById('card').classList.remove('flipped');
+  document.getElementById('stat-correct').textContent = correct;
+  document.getElementById('stat-wrong').textContent = wrong;
+  document.getElementById('stat-remain').textContent = deck.length - current;
+  document.getElementById('progress-fill').style.width = (current / deck.length * 100) + '%';
+  document.getElementById('progress-text').textContent = `Card ${current + 1} of ${deck.length}`;
+  flipped = false;
+}
+
+function flipCard() {
+  if (current >= deck.length) return;
+  flipped = !flipped;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+}
+
+function mark(isCorrect) {
+  if (!flipped) { flipCard(); return; }
+  if (isCorrect) { correct++; }
+  else { wrong++; wrongCards.push(deck[current]); }
+  current++;
+  showCard();
+}
+
+function nextCard() {
+  current++;
+  showCard();
+}
+
+function showComplete() {
+  document.getElementById('card-area').style.display = 'none';
+  document.getElementById('flip-hint').style.display = 'none';
+  document.querySelector('.actions').style.display = 'none';
+  document.getElementById('complete-screen').style.display = 'block';
+  const total = correct + wrong;
+  const pct = total ? Math.round(correct / total * 100) : 0;
+  document.getElementById('final-score').textContent = pct + '%';
+}
+
+function restart() {
+  correct = 0; wrong = 0; current = 0; wrongCards = [];
+  document.getElementById('card-area').style.display = 'block';
+  document.getElementById('flip-hint').style.display = 'block';
+  document.querySelector('.actions').style.display = 'flex';
+  document.getElementById('complete-screen').style.display = 'none';
+  buildDeck();
+  showCard();
+}
+
+restart();
+</script>
+</body>
+</html>
