@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Match — English Learning Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --a1: #58a6ff;
+    --a2: #3fb950;
+    --a3: #f78166;
+    --a4: #d2a8ff;
+    --a5: #ffa657;
+    --a6: #39d353;
+    --selected: #1f6feb;
+    --correct: rgba(63,185,80,0.2);
+    --wrong: rgba(247,129,102,0.2);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  header { text-align: center; margin-bottom: 2rem; }
+
+  header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--a1), var(--a4));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; }
+
+  .hud {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+  }
+
+  .hud-item { text-align: center; }
+  .hud-item .val { font-size: 1.5rem; font-weight: 700; color: var(--a1); font-family: 'Space Mono', monospace; }
+  .hud-item .lbl { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .timer-bar {
+    width: 100%;
+    max-width: 640px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .timer-fill {
+    height: 100%;
+    background: var(--a2);
+    border-radius: 100px;
+    transition: width 1s linear, background 0.5s;
+  }
+
+  .game-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 640px;
+    margin-bottom: 2rem;
+  }
+
+  .column { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .col-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+    padding-left: 2px;
+  }
+
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    line-height: 1.4;
+  }
+
+  .tile:hover:not(.matched):not(.wrong-flash) {
+    border-color: var(--a1);
+    background: var(--surface2);
+  }
+
+  .tile.selected {
+    border-color: var(--selected);
+    background: rgba(31,111,235,0.15);
+    color: var(--a1);
+  }
+
+  .tile.matched {
+    border-color: rgba(63,185,80,0.4);
+    background: var(--correct);
+    color: var(--a2);
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  .tile.wrong-flash {
+    border-color: var(--a3);
+    background: var(--wrong);
+    animation: shake 0.3s ease;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .tile .word { font-weight: 600; }
+  .tile .def { font-size: 0.8rem; color: var(--muted); }
+
+  .deck-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .deck-btn {
+    padding: 0.38rem 0.9rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .deck-btn:hover, .deck-btn.active {
+    border-color: var(--a4);
+    color: var(--a4);
+    background: rgba(210,168,255,0.1);
+  }
+
+  .complete-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13,17,23,0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .complete-overlay.show { display: flex; }
+
+  .complete-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+    max-width: 380px;
+    width: 90%;
+  }
+
+  .complete-box h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--a2), var(--a1));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .complete-box .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin: 1.5rem 0;
+  }
+
+  .stat-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem;
+  }
+
+  .stat-box .n { font-size: 1.8rem; font-weight: 700; font-family: 'Space Mono', monospace; }
+  .stat-box .l { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; }
+
+  .play-btn {
+    background: var(--a1);
+    color: var(--bg);
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 10px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    width: 100%;
+  }
+
+  .play-btn:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Word Match</h1>
+  <p>Connect each word to its correct definition before time runs out</p>
+</header>
+
+<div class="deck-row">
+  <button class="deck-btn active" onclick="setDeck('vocabulary', this)">Vocabulary</button>
+  <button class="deck-btn" onclick="setDeck('phrasal', this)">Phrasal verbs</button>
+  <button class="deck-btn" onclick="setDeck('collocations', this)">Collocations</button>
+</div>
+
+<div class="hud">
+  <div class="hud-item"><div class="val" id="score-val">0</div><div class="lbl">Score</div></div>
+  <div class="hud-item"><div class="val" id="matched-val">0/0</div><div class="lbl">Matched</div></div>
+  <div class="hud-item"><div class="val" id="time-val">60</div><div class="lbl">Seconds</div></div>
+  <div class="hud-item"><div class="val" id="streak-val">0</div><div class="lbl">Streak 🔥</div></div>
+</div>
+
+<div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+
+<div class="game-area" id="game-area">
+  <div class="column">
+    <div class="col-label">Words</div>
+    <div id="words-col"></div>
+  </div>
+  <div class="column">
+    <div class="col-label">Definitions</div>
+    <div id="defs-col"></div>
+  </div>
+</div>
+
+<div class="complete-overlay" id="complete-overlay">
+  <div class="complete-box">
+    <h2 id="complete-title">Round over!</h2>
+    <p style="color:var(--muted);font-size:0.88rem;" id="complete-sub"></p>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="n" id="res-score" style="color:var(--a1)">0</div><div class="l">Score</div></div>
+      <div class="stat-box"><div class="n" id="res-matched" style="color:var(--a2)">0</div><div class="l">Matched</div></div>
+      <div class="stat-box"><div class="n" id="res-time" style="color:var(--a5)">0s</div><div class="l">Time left</div></div>
+      <div class="stat-box"><div class="n" id="res-streak" style="color:var(--a3)">0</div><div class="l">Best streak</div></div>
+    </div>
+    <button class="play-btn" onclick="startGame()">Play again</button>
+  </div>
+</div>
+
+<script>
+const DECKS = {
+  vocabulary: [
+    { word: "inevitable", def: "Impossible to avoid; certain to happen" },
+    { word: "nuance", def: "A subtle difference in meaning or tone" },
+    { word: "reluctant", def: "Unwilling or hesitant to do something" },
+    { word: "drawback", def: "A disadvantage or problem" },
+    { word: "forthcoming", def: "About to happen; or willing to share info" },
+    { word: "prominent", def: "Well-known and important; easily noticeable" },
+    { word: "insightful", def: "Showing a deep, accurate understanding" },
+    { word: "compelling", def: "Powerfully persuasive or gripping" },
+  ],
+  phrasal: [
+    { word: "come up with", def: "To think of an idea or solution" },
+    { word: "put off", def: "To postpone or delay something" },
+    { word: "come across", def: "To seem or be perceived in a certain way" },
+    { word: "follow up", def: "To check progress on something started earlier" },
+    { word: "build on", def: "To use as a foundation for further progress" },
+    { word: "burn out", def: "To exhaust yourself from overworking" },
+    { word: "point out", def: "To draw attention to something" },
+    { word: "step down", def: "To resign from a position" },
+  ],
+  collocations: [
+    { word: "make a decision", def: "To decide something (not 'do a decision')" },
+    { word: "raise awareness", def: "To increase people's knowledge about an issue" },
+    { word: "conduct research", def: "To carry out a study (not 'make research')" },
+    { word: "deeply concerned", def: "Stronger way to say 'very worried'" },
+    { word: "reach a conclusion", def: "To arrive at a final decision or judgment" },
+    { word: "take responsibility", def: "To accept that you are accountable for something" },
+    { word: "meet expectations", def: "To achieve the required or hoped-for standard" },
+    { word: "play a key role", def: "To be very important in something" },
+  ]
+};
+
+const ROUND_SIZE = 6;
+let deck = 'vocabulary';
+let selectedWord = null;
+let selectedDef = null;
+let pairs = [];
+let matched = 0;
+let score = 0;
+let streak = 0;
+let bestStreak = 0;
+let timer = 60;
+let timerInterval = null;
+let gameActive = false;
+
+function setDeck(d, btn) {
+  deck = d;
+  document.querySelectorAll('.deck-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  startGame();
+}
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function startGame() {
+  clearInterval(timerInterval);
+  document.getElementById('complete-overlay').classList.remove('show');
+  matched = 0; score = 0; streak = 0; bestStreak = 0; selectedWord = null; selectedDef = null;
+  timer = 60;
+  gameActive = true;
+
+  const allPairs = DECKS[deck];
+  pairs = shuffle(allPairs).slice(0, ROUND_SIZE);
+  const words = shuffle(pairs.map((p, i) => ({ ...p, id: i })));
+  const defs = shuffle(pairs.map((p, i) => ({ ...p, id: i })));
+
+  const wCol = document.getElementById('words-col');
+  const dCol = document.getElementById('defs-col');
+  wCol.innerHTML = '';
+  dCol.innerHTML = '';
+
+  words.forEach(p => {
+    const t = document.createElement('div');
+    t.className = 'tile';
+    t.dataset.id = p.id;
+    t.dataset.type = 'word';
+    t.innerHTML = `<span class="word">${p.word}</span>`;
+    t.onclick = () => selectTile(t, 'word', p.id);
+    wCol.appendChild(t);
+  });
+
+  defs.forEach(p => {
+    const t = document.createElement('div');
+    t.className = 'tile';
+    t.dataset.id = p.id;
+    t.dataset.type = 'def';
+    t.style.fontSize = '0.8rem';
+    t.textContent = p.def;
+    t.onclick = () => selectTile(t, 'def', p.id);
+    dCol.appendChild(t);
+  });
+
+  updateHUD();
+
+  timerInterval = setInterval(() => {
+    timer--;
+    document.getElementById('time-val').textContent = timer;
+    const pct = timer / 60 * 100;
+    const fill = document.getElementById('timer-fill');
+    fill.style.width = pct + '%';
+    fill.style.background = timer > 20 ? '#3fb950' : timer > 10 ? '#ffa657' : '#f78166';
+    if (timer <= 0) endGame(false);
+  }, 1000);
+}
+
+function selectTile(tile, type, id) {
+  if (!gameActive) return;
+  if (tile.classList.contains('matched')) return;
+
+  if (type === 'word') {
+    document.querySelectorAll('[data-type="word"]').forEach(t => t.classList.remove('selected'));
+    tile.classList.add('selected');
+    selectedWord = { tile, id };
+  } else {
+    document.querySelectorAll('[data-type="def"]').forEach(t => t.classList.remove('selected'));
+    tile.classList.add('selected');
+    selectedDef = { tile, id };
+  }
+
+  if (selectedWord && selectedDef) checkMatch();
+}
+
+function checkMatch() {
+  const { tile: wt, id: wid } = selectedWord;
+  const { tile: dt, id: did } = selectedDef;
+  selectedWord = null; selectedDef = null;
+
+  if (wid === did) {
+    wt.classList.remove('selected');
+    dt.classList.remove('selected');
+    wt.classList.add('matched');
+    dt.classList.add('matched');
+    matched++;
+    streak++;
+    if (streak > bestStreak) bestStreak = streak;
+    score += 10 + streak * 2;
+    updateHUD();
+    if (matched === ROUND_SIZE) setTimeout(() => endGame(true), 400);
+  } else {
+    streak = 0;
+    wt.classList.add('wrong-flash');
+    dt.classList.add('wrong-flash');
+    score = Math.max(0, score - 3);
+    updateHUD();
+    setTimeout(() => {
+      wt.classList.remove('wrong-flash', 'selected');
+      dt.classList.remove('wrong-flash', 'selected');
+    }, 400);
+  }
+}
+
+function updateHUD() {
+  document.getElementById('score-val').textContent = score;
+  document.getElementById('matched-val').textContent = `${matched}/${ROUND_SIZE}`;
+  document.getElementById('streak-val').textContent = streak;
+}
+
+function endGame(won) {
+  clearInterval(timerInterval);
+  gameActive = false;
+  document.getElementById('complete-title').textContent = won ? '🎉 All matched!' : '⏱ Time\'s up!';
+  document.getElementById('complete-sub').textContent = won
+    ? `You matched all ${ROUND_SIZE} pairs with ${timer}s remaining.`
+    : `You matched ${matched} of ${ROUND_SIZE} pairs.`;
+  document.getElementById('res-score').textContent = score;
+  document.getElementById('res-matched').textContent = `${matched}/${ROUND_SIZE}`;
+  document.getElementById('res-time').textContent = timer + 's';
+  document.getElementById('res-streak').textContent = bestStreak;
+  document.getElementById('complete-overlay').classList.add('show');
+}
+
+startGame();
+</script>
+</body>
+</html>
