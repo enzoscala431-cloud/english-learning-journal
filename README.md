@@ -65,7 +65,7 @@ Track monthly in this table:
 
 | Month | Words learned | Essays written | Articles read | Errors fixed |
 |-------|--------------|----------------|---------------|--------------|
-| — | — | — | — | — |
+| Abril | 0 | 0 | 0 | 0 |
 
 ---
 
@@ -79,4 +79,4 @@ Track monthly in this table:
 
 ---
 
-*Started: [date] | Repository by [your name]*# english-learning-journal
+*Started: [7/4/2026] | Repository by [Enzo]*# english-learning-journal
