@@ -23,8 +23,8 @@ english-learning-journal/
 │   ├── summaries.md             # Article summaries (weekly)
 │   └── reviews.md               # Series, books, films
 ├── reading/
-│   ├── articles.md            # Reading log with notes
-│   └── vocabulary-in-context.md
+│   ├── articles.md                # Reading log with notes
+│    
 ├── games/
 │   ├── flashcards.html          ✨ Interactive flashcard game
 │   ├── word-match.html          ✨ Matching game
@@ -41,31 +41,11 @@ english-learning-journal/
 
 | Game | Description | Skills |
 |------|-------------|--------|
-| [🃏 Flashcards](games/flashcards.html) | Flip cards to test vocabulary, collocations & phrasal verbs. Mark what you know. | Vocabulary |
-| [✏️ Fill in the Blank](games/fill-in-the-blank.html) | Choose the correct word to complete real B2 sentences. Immediate feedback. | Grammar · Vocab |
-| [⚡ Word Match](games/word-match.html) | Race against the clock — pair words with their definitions. Streak system. | Vocabulary |
-| [🏠 Games Dashboard](games/index.html) | Hub with all games + weekly routine + study notes overview. | All |
+| [🃏 Flashcards](juegos/Flashcards.html) | Flip cards to test vocabulary, collocations & phrasal verbs. Mark what you know. | Vocabulary |
+| [✏️ Fill in the Blank](juegos/Fill-in-the-blank.html) | Choose the correct word to complete real B2 sentences. Immediate feedback. | Grammar · Vocab |
+| [⚡ Word Match](juegos/Word-match.html) | Race against the clock — pair words with their definitions. Streak system. | Vocabulary |
+| [🏠 Games Dashboard](juegos/index.html) | Hub with all games + weekly routine + study notes overview. | All |
 
-> **Tip:** GitHub renders HTML files but doesn't run them directly from the repo view.  
-> To play, either clone the repo and open locally, or use **GitHub Pages** (see below).
-
-### 🚀 Enable GitHub Pages (play online, no cloning needed)
-
-1. Go to your repo → **Settings** → **Pages**
-2. Source: `Deploy from a branch` → branch: `main` → folder: `/ (root)`
-3. Save — in ~1 minute your games will be live at:  
-   `https://enzoscala431-cloud.github.io/english-learning-journal/games/`
-
----
-
-## 🎯 Current Level: B2
-
-**Focus areas for B2 → C1:**
-- Nuanced vocabulary (avoiding overused words)
-- Complex sentence structures
-- Idiomatic and natural-sounding language
-- Academic writing patterns
-- Listening comprehension of native-speed audio
 
 ---
 
@@ -80,26 +60,6 @@ english-learning-journal/
 | Friday | Write opinion essay or review |
 | Weekend | Games & revision |
 
----
 
-## 📊 Progress Tracker
-
-Track monthly in this table:
-
-| Month | Words learned | Essays written | Articles read | Errors fixed |
-|-------|--------------|----------------|---------------|--------------|
-| — | — | — | — | — |
-
----
-
-## 💡 Tips for B2 learners
-
-1. **Don't translate** — think directly in English when writing
-2. **Read aloud** — it reinforces grammar and pronunciation simultaneously  
-3. **Use mistakes.md actively** — revisit it every week
-4. **Avoid comfort words** — ban "good", "thing", "nice" for a week
-5. **Commit every day** — even one sentence counts
-
----
 
 *Started: [7/4/2026] | Repository by [Enzo]*
